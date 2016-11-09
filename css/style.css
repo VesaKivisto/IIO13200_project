@@ -1,0 +1,42 @@
+﻿body {
+
+}
+
+.tweetDataContainer {
+    background-color: white;
+    margin: 10px;
+    border: 1px solid black;
+}
+
+.tweetSenderPictureContainer {
+    float:left;
+    margin: 10px;
+    width: 50px;
+}
+
+.tweetContainer {
+    background-color: red;
+}
+
+.tweetControlsContainer {
+    position: relative;
+    padding-top: 10px;
+    background-color: green;
+}
+
+.tweetPublicationData {
+    background-color:blueviolet;
+    width: 100%;
+    padding: 7px 0;
+}
+
+.divTweet {
+    background-color: darkgrey;
+    height: 150px;
+    width: 150px;
+}
+
+.tweetPublicationDate {
+    position:relative;
+    left: 70px;
+}

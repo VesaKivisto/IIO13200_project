@@ -16,6 +16,7 @@
             }
         }
     </script>
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
 </head>
 <body>
     <form id="form1" runat="server">
@@ -52,33 +53,6 @@
             </div>
             <!-- Timeline container -->
             <div id="divTimeline" runat="server" style="background-color:green;height:500px;width:37%;float:left;">
-                <!-- A single tweet, these will be added dynamically in code -->
-                <div style="background-color:white;margin:10px;height:150px;">
-                    <!-- Profile image -->
-                    <div style="width:50px;margin:10px;display:inline-block;">
-                        <asp:Image ID="imgTweetSenderPicture" runat="server" src="" />
-                    </div>
-                    <!-- The actual tweet -->
-                    <div style="display:inline-block;">
-                        <!-- Name and publish date of the tweet -->
-                        <div>
-                            <asp:Label ID="lblTweetSenderUserName" runat="server" Text="" Font-Bold="true" />
-                            <asp:Label ID="lblTweetSenderScreenName" runat="server" Text="" style="color:lightgray;" />
-                            <asp:Label ID="lblTweetPublishDate" runat="server" />
-                        </div>
-                        <!-- Tweet text -->
-                        <div id="divTweet" runat="server" >
-
-                        </div>
-                        <!-- Retweet and other controls here -->
-                        <div>
-                            <!-- Labels are only placeholders currently -->
-                            <asp:Label ID="lblReply" runat="server" />
-                            <asp:Label ID="lblRetweet" runat="server" />
-                            <asp:Label ID="lblLike" runat="server" />
-                        </div>
-                    </div>
-                </div>
                 
             </div>
             <!-- Notifications container -->
