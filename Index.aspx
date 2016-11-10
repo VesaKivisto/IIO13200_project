@@ -20,9 +20,9 @@
 </head>
 <body>
     <form id="form1" runat="server">
-        <div style="height:500px;background-color:aqua;width:1200px;">
+        <div style="height:750px;width:1200px;">
             <!-- Profile container -->
-            <div style="background-color:red;height:500px;width:25%;float:left;margin-right:4px;">
+            <div style="width:25%;float:left;margin-right:4px;">
                 <!-- New tweet container -->
                 <div style="height:250px;">
                     <asp:TextBox ID="txtTweet" runat="server" TextMode="MultiLine" Placeholder="New tweet" Rows="10" Columns="36" style="margin:10px 10px 5px 12px;resize:none;"
@@ -36,27 +36,28 @@
                         <asp:Image ID="imgProfilePicture" runat="server" src="" />
                     </div>
                     <!-- Name -->
-                    <div style="display:inline-block;position:relative;bottom:20px;left:10px;height:70px;">
-                        <asp:Label ID="lblUserName" runat="server" Font-Bold="true" Font-Size="Larger" style="color:white;"/>
+                    <div style="display:inline-block;position:relative;bottom:10px;left:10px;height:70px;">
+                        <asp:Label ID="lblScreenName" runat="server" Font-Bold="true" Font-Size="Larger"/>
                         <br />
-                        <asp:Label ID="lblScreenName" runat="server" style="color:white;" />
+                        <asp:Label ID="lblUserName" runat="server" />
                     </div>
                     <!-- Tweets, followers, following -->
                     <div style="margin-left:12px;">
-                        <asp:Label ID="lblTweets" runat="server" style="color:white;" />
+                        <asp:Label ID="lblTweets" runat="server" />
                         <br />
-                        <asp:Label ID="lblFollowing" runat="server" style="color:white;" />
+                        <asp:Label ID="lblFollowing" runat="server" />
                         <br />
-                        <asp:Label ID="lblFollowers" runat="server" style="color:white;" />
+                        <asp:Label ID="lblFollowers" runat="server" />
                     </div>
                 </div>
             </div>
             <!-- Timeline container -->
-            <div id="divTimeline" runat="server" style="background-color:green;height:500px;width:37%;float:left;">
+            <div class="timeLineContainer" id="divTimeline" runat="server" >
                 
             </div>
             <!-- Notifications container -->
-            <div style="background-color:blue;height:500px;width:37%;display:inline-block;">
+            <!-- Apparently Twitter API doesn't allow fetching likes and follow notifications, so this div will be only used for mentions -->
+            <div class="mentionsContainer" id="divMentions" runat="server" >
 
             </div>
         </div>

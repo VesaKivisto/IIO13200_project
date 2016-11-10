@@ -4,8 +4,10 @@
 
 .tweetDataContainer {
     background-color: white;
-    margin: 10px;
-    border: 1px solid black;
+    margin: 10px 20px 20px 10px;
+    -webkit-box-shadow: 3px 3px 10px 3px rgba(0,0,0,0.4);
+    -moz-box-shadow: 3px 3px 10px 3px rgba(0,0,0,0.4);
+    box-shadow: 3px 3px 10px 3px rgba(0,0,0,0.4);
 }
 
 .tweetSenderPictureContainer {
@@ -15,28 +17,46 @@
 }
 
 .tweetContainer {
-    background-color: red;
+    
+    display: inline-block;
+    width: 80%;
 }
 
 .tweetControlsContainer {
+    padding: 15px 0;
     position: relative;
-    padding-top: 10px;
-    background-color: green;
 }
 
 .tweetPublicationData {
-    background-color:blueviolet;
+    
     width: 100%;
     padding: 7px 0;
 }
 
 .divTweet {
-    background-color: darkgrey;
+    
     height: 150px;
     width: 150px;
 }
 
 .tweetPublicationDate {
     position:relative;
-    left: 70px;
+    left: 120px;
+}
+
+.timeLineContainer {
+    height: 750px;
+    width: 35%;
+    float: left;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    margin-right: 10px;
+}
+
+.mentionsContainer {
+    height: 750px;
+    width: 35%;
+    display: inline-block;
+    overflow-x: hidden;
+    overflow-y: scroll;
 }

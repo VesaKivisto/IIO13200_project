@@ -1,20 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using Tweetinvi;
 using Tweetinvi.Models;
-using Tweetinvi.Parameters;
-using System.Linq;
 using System.Web.UI.HtmlControls;
 using System.Drawing;
 using System.Web.UI.WebControls;
+using System.Globalization;
+using System.Threading;
+using System.Text.RegularExpressions;
+using System.Web.UI;
 
 public partial class Index : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
         // Testing user authentication and stuff
-        Auth.SetUserCredentials("bZ2HRNQNOoHn8bFBnsUIXjogl", "MOLEBx5NZGnl8eOYcWnl9xxychGacU0Oh8LGsqCUFiPfxmYPGl", "411057460-2L7OPNPrLj7x54glPuf177wFDVULHMTzZXkFJljW", "HU3CxjJGhTl3TlnnEIT3OsFA7ZafMK0BvUdB4dmALVjUx");
+        Auth.SetUserCredentials("La23vsEKuSQGbK5XQEngmpxsT", "PYvX3TrKz701FmjdZSBoutTj4bNTDhpOriBPgyd2R87MST5wFl", "411057460-wclDRe8viNRDzw4xVvdSyrATkFIMovKY8dFNTf5C", "mD9my4ztmQCthQNtoR1D5DwS0FGwy2S9eeXKeJTW0dyX0");
         var user = Tweetinvi.User.GetAuthenticatedUser();
         lblScreenName.Text = user.Name;
         lblUserName.Text = "@" + user.ScreenName;
@@ -22,7 +22,7 @@ public partial class Index : System.Web.UI.Page
         lblTweets.Text = "Tweets: " + user.StatusesCount.ToString();
         lblFollowing.Text = "Following: " + user.FriendsCount.ToString();
         lblFollowers.Text = "Followers: " + user.FollowersCount.ToString();
-        GenerateTweet(user);
+        GenerateTimeline(user);
     }
 
     protected void btnSendTweet_Click(object sender, EventArgs e)
@@ -31,77 +31,125 @@ public partial class Index : System.Web.UI.Page
         Tweet.PublishTweet(txtTweet.Text);
     }
 
-    protected void GenerateTweet(IAuthenticatedUser user)
+    protected void GenerateTimeline(IAuthenticatedUser user)
     {
-        // Testing tweet layout
-        var latestTweets = user.GetUserTimeline(4);
-        var tweetData = latestTweets.Last();
-        // Generate tweets. Layout breaks with multiple tweets currently.
-        //foreach (var tweetData in latestTweets)
-        //{
-            string tweet = tweetData.Text;
-            tweet = tweet.Replace("\n", "<br />");
+        var latestTweets = user.GetHomeTimeline();
+        var userMentions = user.GetMentionsTimeline();
+        // Generate home timeline
+        foreach (var tweetData in latestTweets)
+        {
+            if (tweetData.RetweetedTweet != null)
+            {
+                GenerateTweet(tweetData.RetweetedTweet, "divTimeline");
+            }
+            else
+            {
+                GenerateTweet(tweetData, "divTimeline");
+            }
+        }
+        // Generate mentions timeline
+        foreach (var tweetData in userMentions)
+        {
+            GenerateTweet(tweetData, "divMentions");
+        }
+    }
 
-            HtmlGenericControl tweetDataContainer = new HtmlGenericControl("div");
-            tweetDataContainer.Attributes["class"] = "tweetDataContainer";
+    protected void GenerateTweet(ITweet tweetData, string divIdentifier)
+    {
+        string tweet = tweetData.Text;
+        tweet = tweet.Replace("\n", "<br />");
 
-            HtmlGenericControl tweetSenderPictureContainer = new HtmlGenericControl("div");
-            tweetSenderPictureContainer.Attributes["class"] = "tweetSenderPictureContainer";
+        // Find all links and replace them with hyperlinks. For some reason the API doesn't give all images as media entities, and they don't have any media urls as non-media entities.
+        tweet = Regex.Replace(tweet,
+                @"((http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?)",
+                "<a target='_blank' href='$1'>$1</a>");
 
-            HtmlImage imgTweetSenderPicture = new HtmlImage();
-            imgTweetSenderPicture.Attributes["src"] = tweetData.CreatedBy.ProfileImageUrl;
+        // Find the div to append to. Different for mentions and normal timeline
+        Control divToAppend = FindControl(divIdentifier);
 
-            tweetSenderPictureContainer.Controls.Add(imgTweetSenderPicture);
+        HtmlGenericControl tweetDataContainer = new HtmlGenericControl("div");
+        tweetDataContainer.Attributes["class"] = "tweetDataContainer";
 
-            HtmlGenericControl tweetContainer = new HtmlGenericControl("div");
-            tweetContainer.Attributes["class"] = "tweetContainer";
+        HtmlGenericControl tweetSenderPictureContainer = new HtmlGenericControl("div");
+        tweetSenderPictureContainer.Attributes["class"] = "tweetSenderPictureContainer";
 
-            HtmlGenericControl tweetPublicationData = new HtmlGenericControl("div");
-            tweetPublicationData.Attributes["class"] = "tweetPublicationData";
+        HtmlImage imgTweetSenderPicture = new HtmlImage();
+        imgTweetSenderPicture.Attributes["src"] = tweetData.CreatedBy.ProfileImageUrl;
 
-            Label lblTweetSenderUserName = new Label();
-            lblTweetSenderUserName.Text = tweetData.CreatedBy.Name;
-            lblTweetSenderUserName.Font.Bold = true;
+        tweetSenderPictureContainer.Controls.Add(imgTweetSenderPicture);
 
-            Label lblTweetSenderScreenName = new Label();
-            lblTweetSenderScreenName.Text = "@" + tweetData.CreatedBy.ScreenName;
-            lblTweetSenderScreenName.ForeColor = Color.LightGray;
+        HtmlGenericControl tweetContainer = new HtmlGenericControl("div");
+        tweetContainer.Attributes["class"] = "tweetContainer";
 
-            Label lblTweetPublishDate = new Label();
-            lblTweetPublishDate.Text = tweetData.CreatedAt.ToString();
-            lblTweetPublishDate.Attributes["class"] = "tweetPublicationDate";
+        HtmlGenericControl tweetPublicationData = new HtmlGenericControl("div");
+        tweetPublicationData.Attributes["class"] = "tweetPublicationData";
 
-            tweetPublicationData.Controls.Add(lblTweetSenderUserName);
-            tweetPublicationData.Controls.Add(lblTweetSenderScreenName);
-            tweetPublicationData.Controls.Add(lblTweetPublishDate);
+        Label lblTweetSenderUserName = new Label();
+        lblTweetSenderUserName.Text = tweetData.CreatedBy.Name;
+        lblTweetSenderUserName.Font.Bold = true;
 
-            Label lblTweetText = new Label();
-            lblTweetText.Text = tweet;
+        Label lblTweetSenderScreenName = new Label();
+        lblTweetSenderScreenName.Text = "@" + tweetData.CreatedBy.ScreenName;
+        lblTweetSenderScreenName.ForeColor = Color.LightGray;
 
-            HtmlGenericControl tweetControlsContainer = new HtmlGenericControl("div");
-            tweetControlsContainer.Attributes["class"] = "tweetControlsContainer";
+        Label lblTweetPublishDate = new Label();
+        Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+        DateTime createdAt = tweetData.CreatedAt;
+        DateTime now = DateTime.Now;
+        TimeSpan span = now.Subtract(createdAt);
 
-            Label lblReply = new Label();
-            lblReply.Text = "Reply";
+        if (span.TotalMinutes < 1)
+        {
+            lblTweetPublishDate.Text = span.Seconds.ToString() + "s";
+        }
+        else if (span.TotalHours < 1)
+        {
+            lblTweetPublishDate.Text = span.Minutes.ToString() + "m";
+        }
+        else if (span.TotalDays < 1)
+        {
+            lblTweetPublishDate.Text = span.Hours.ToString() + "h";
+        }
+        else if (span.TotalDays > 365)
+        {
+            lblTweetPublishDate.Text = tweetData.CreatedAt.ToString("MMM d yyy");
+        }
+        else
+        {
+            lblTweetPublishDate.Text = tweetData.CreatedAt.ToString("MMM d");
+        }
+        lblTweetPublishDate.Attributes["class"] = "tweetPublicationDate";
 
-            Label lblRetweet = new Label();
-            lblRetweet.Text = "Retweet " + tweetData.RetweetCount.ToString();
+        tweetPublicationData.Controls.Add(lblTweetSenderUserName);
+        tweetPublicationData.Controls.Add(lblTweetSenderScreenName);
+        tweetPublicationData.Controls.Add(lblTweetPublishDate);
 
-            Label lblLike = new Label();
-            lblLike.Text = "Like " + tweetData.FavoriteCount.ToString();
+        Label lblTweetText = new Label();
+        lblTweetText.Text = tweet;
 
-            tweetControlsContainer.Controls.Add(lblReply);
-            tweetControlsContainer.Controls.Add(lblRetweet);
-            tweetControlsContainer.Controls.Add(lblLike);
+        HtmlGenericControl tweetControlsContainer = new HtmlGenericControl("div");
+        tweetControlsContainer.Attributes["class"] = "tweetControlsContainer";
 
-            tweetContainer.Controls.Add(tweetPublicationData);
-            tweetContainer.Controls.Add(lblTweetText);
-            tweetContainer.Controls.Add(tweetControlsContainer);
+        Label lblReply = new Label();
+        lblReply.Text = "Reply";
 
-            tweetDataContainer.Controls.Add(tweetSenderPictureContainer);
-            tweetDataContainer.Controls.Add(tweetContainer);
+        Label lblRetweet = new Label();
+        lblRetweet.Text = "Retweet " + tweetData.RetweetCount.ToString();
 
-            divTimeline.Controls.Add(tweetDataContainer);
-        //}
+        Label lblLike = new Label();
+        lblLike.Text = "Like " + tweetData.FavoriteCount.ToString();
+
+        tweetControlsContainer.Controls.Add(lblReply);
+        tweetControlsContainer.Controls.Add(lblRetweet);
+        tweetControlsContainer.Controls.Add(lblLike);
+
+        tweetContainer.Controls.Add(tweetPublicationData);
+        tweetContainer.Controls.Add(lblTweetText);
+        tweetContainer.Controls.Add(tweetControlsContainer);
+
+        tweetDataContainer.Controls.Add(tweetSenderPictureContainer);
+        tweetDataContainer.Controls.Add(tweetContainer);
+
+        divToAppend.Controls.Add(tweetDataContainer);
     }
 }
