@@ -1,26 +1,27 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "TwitterClient", "TwitterClient\", "{BF4E202D-0D05-408E-83C9-4288AAB23364}"
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "IIO13200_project", "Z:\NET\IIO13200_project\", "{711C854A-E676-48EA-9AC0-A6F3E5C71E9F}"
 	ProjectSection(WebsiteProperties) = preProject
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5.2"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_2628"
-		Debug.AspNetCompiler.PhysicalPath = "TwitterClient\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_2628\"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_17590"
+		Debug.AspNetCompiler.PhysicalPath = "Z:\NET\IIO13200_project\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_17590\"
 		Debug.AspNetCompiler.Updateable = "true"
 		Debug.AspNetCompiler.ForceOverwrite = "true"
 		Debug.AspNetCompiler.FixedNames = "false"
 		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_2628"
-		Release.AspNetCompiler.PhysicalPath = "TwitterClient\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_2628\"
+		Release.AspNetCompiler.VirtualPath = "/localhost_17590"
+		Release.AspNetCompiler.PhysicalPath = "Z:\NET\IIO13200_project\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_17590\"
 		Release.AspNetCompiler.Updateable = "true"
 		Release.AspNetCompiler.ForceOverwrite = "true"
 		Release.AspNetCompiler.FixedNames = "false"
 		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "2628"
+		VWDPort = "17590"
+		SlnRelativePath = "D:\VisualStudio\Projects\IIO13200_project\"
 		DefaultWebSiteLanguage = "Visual C#"
 	EndProjectSection
 EndProject
@@ -31,8 +32,6 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{711C854A-E676-48EA-9AC0-A6F3E5C71E9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{711C854A-E676-48EA-9AC0-A6F3E5C71E9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BF4E202D-0D05-408E-83C9-4288AAB23364}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BF4E202D-0D05-408E-83C9-4288AAB23364}.Debug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

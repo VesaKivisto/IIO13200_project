@@ -20,9 +20,9 @@
 </head>
 <body>
     <form id="form1" runat="server">
-        <div style="height:750px;width:1200px;">
+        <div style="height:750px;width:1500px;">
             <!-- Profile container -->
-            <div style="width:25%;float:left;margin-right:4px;">
+            <div style="width:20%;float:left;margin-right:4px;">
                 <!-- New tweet container -->
                 <div style="height:250px;">
                     <asp:TextBox ID="txtTweet" runat="server" TextMode="MultiLine" Placeholder="New tweet" Rows="10" Columns="36" style="margin:10px 10px 5px 12px;resize:none;"

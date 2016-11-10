@@ -14,7 +14,7 @@ public partial class Index : System.Web.UI.Page
     protected void Page_Load(object sender, EventArgs e)
     {
         // Testing user authentication and stuff
-        Auth.SetUserCredentials("La23vsEKuSQGbK5XQEngmpxsT", "PYvX3TrKz701FmjdZSBoutTj4bNTDhpOriBPgyd2R87MST5wFl", "411057460-wclDRe8viNRDzw4xVvdSyrATkFIMovKY8dFNTf5C", "mD9my4ztmQCthQNtoR1D5DwS0FGwy2S9eeXKeJTW0dyX0");
+        Auth.SetUserCredentials("CONSUMER_KEY", "CONSUMER_SECRET", "ACCESS_TOKEN", "ACCESS_TOKEN_SECRET");
         var user = Tweetinvi.User.GetAuthenticatedUser();
         lblScreenName.Text = user.Name;
         lblUserName.Text = "@" + user.ScreenName;
