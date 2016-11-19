@@ -14,7 +14,10 @@ public partial class MainPage : System.Web.UI.Page
 {
     private static IEnumerable<ITweet> latestTweets;
     private static IEnumerable<IMention> userMentions;
+    private static IEnumerable<ITweet> lastQueriedTimeline;
+    private static IEnumerable<ITweet> lastQueriedMentions;
     private static IAuthenticatedUser user;
+    private static ICredentialsRateLimits rateLimits;
     private static long tweetIdToReplyTo = 0;
     private static bool isFavorited = false;
     private static bool isRetweeted = false;
@@ -26,15 +29,24 @@ public partial class MainPage : System.Web.UI.Page
             {
                 Response.Redirect("LogIn.aspx");
             }
-            // Enable RateLimit Tracking
-            RateLimit.RateLimitTrackerMode = RateLimitTrackerMode.TrackAndAwait;
             user = (IAuthenticatedUser)Session["user"];
             InitUserData(user);
-            latestTweets = user.GetHomeTimeline(200);
-            userMentions = user.GetMentionsTimeline(200);
+            // Enable RateLimit Tracking
+            RateLimit.RateLimitTrackerMode = RateLimitTrackerMode.TrackOnly;
+            rateLimits = RateLimit.GetCurrentCredentialsRateLimits();
+            try
+            {
+                latestTweets = user.GetHomeTimeline(5);
+                userMentions = user.GetMentionsTimeline(5);
+            }
+            catch (Exception ex)
+            {
+                Response.Write("<script>alert('" + ex.Message + "')</script>");
+            }
         }
         GenerateTimeline(user);
     }
+
     protected void InitUserData(IAuthenticatedUser user)
     {
         lblScreenName.Text = user.Name;
@@ -43,117 +55,74 @@ public partial class MainPage : System.Web.UI.Page
     }
     protected void btnSendTweet_Click(object sender, EventArgs e)
     {
-        // Send tweet
-        if (tweetIdToReplyTo != 0)
+        try
         {
-            Tweet.PublishTweetInReplyTo(txtTweet.Text, tweetIdToReplyTo);
+            // Send tweet
+            if (tweetIdToReplyTo != 0)
+            {
+                Tweet.PublishTweetInReplyTo(txtTweet.Text, tweetIdToReplyTo);
+            }
+            else
+            {
+                Tweet.PublishTweet(txtTweet.Text);
+            }
+            txtTweet.Text = "";
         }
-        else
+        catch (Exception ex)
         {
-            Tweet.PublishTweet(txtTweet.Text);
+            Response.Write("<script>alert('" + ex.Message + "')</script>");
         }
-        txtTweet.Text = "";
     }
     protected void GenerateTimeline(IAuthenticatedUser user)
     {
-        // Generate home timeline
-        foreach (var tweetData in latestTweets)
+        bool exception = false;
+        try
         {
-            GenerateTweet(tweetData, "divTimeline");
+            // Generate home timeline
+            foreach (var tweetData in latestTweets)
+            {
+                GenerateTweet(tweetData, "divTimeline");
+                lastQueriedTimeline = latestTweets;
+            }
+            // Generate mentions timeline
+            foreach (var tweetData in userMentions)
+            {
+                GenerateTweet(tweetData, "divMentions");
+                lastQueriedMentions = userMentions;
+            }
         }
-        // Generate mentions timeline
-        foreach (var tweetData in userMentions)
+        catch (Exception)
         {
-            GenerateTweet(tweetData, "divMentions");
+            exception = true;
+            TimeSpan time = TimeSpan.FromSeconds(Math.Round(rateLimits.StatusesHomeTimelineLimit.ResetDateTimeInSeconds));
+            Response.Write("<script>alert('RateLimits exceeded! Please wait " + time.Minutes + " minutes and " + time.Seconds + " seconds.')</script>");
+        }
+        finally
+        {
+            if (exception && lastQueriedMentions != null && lastQueriedTimeline != null)
+            {
+                foreach (var tweetData in lastQueriedTimeline)
+                {
+                    GenerateTweet(tweetData, "divTimeline");
+                }
+                foreach (var tweetData in lastQueriedMentions)
+                {
+                    GenerateTweet(tweetData, "divMentions");
+                }
+            }
         }
     }
     protected void GenerateTweet(ITweet tweetData, string divIdentifier)
     {
-        Label lblRetweetedBy = new Label();
-        if (tweetData.RetweetedTweet != null)
-        {
-            var retweetedBy = tweetData.CreatedBy;
-            tweetData = tweetData.RetweetedTweet;
-            lblRetweetedBy.Text = retweetedBy.Name + " retweeted<br />";
-            lblRetweetedBy.Attributes["class"] = "retweetedByUser";
-        }
-
+        BLTwitterClient twitterClient = new BLTwitterClient();
         // Find the div to append to. Different for mentions and normal timeline
-        Control divToAppend = FindControl(divIdentifier);
+        Control divToAppend = Master.FindControl("ContentPlaceHolder1").FindControl(divIdentifier);
 
-        HtmlGenericControl tweetDataContainer = new HtmlGenericControl("div");
-        tweetDataContainer.Attributes["class"] = "card horizontal";
-
-        HtmlGenericControl tweetSenderPictureContainer = new HtmlGenericControl("div");
-        tweetSenderPictureContainer.Attributes["class"] = "card-image";
-
-        HtmlImage imgTweetSenderPicture = new HtmlImage();
-        imgTweetSenderPicture.Attributes["src"] = tweetData.CreatedBy.ProfileImageUrl;
-
-        tweetSenderPictureContainer.Controls.Add(imgTweetSenderPicture);
-
-        HtmlGenericControl tweetContainer = new HtmlGenericControl("div");
-        tweetContainer.Attributes["class"] = "card-stacked";
-
-        HtmlGenericControl tweetPublicationData = new HtmlGenericControl("div");
-        tweetPublicationData.Attributes["class"] = "card-content tweet-sender";
-
-        Label lblTweetSenderUserName = new Label();
-        lblTweetSenderUserName.Text = tweetData.CreatedBy.Name;
-        lblTweetSenderUserName.Attributes["class"] = "tweetSenderUserName";
-
-        Label lblTweetSenderScreenName = new Label();
-        lblTweetSenderScreenName.Text = "<a href=ProfilePage.aspx?user=" + tweetData.CreatedBy.ScreenName + " target='_blank' style='text-decoration:none;color:#828282;'>@" + tweetData.CreatedBy.ScreenName + "</a>";
-        lblTweetSenderScreenName.Attributes["class"] = "tweetSenderScreenName";
-
-        Label lblTweetPublishDate = new Label();
-        lblTweetPublishDate.Attributes["class"] = "tweetPublicationDate";
-        Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
-        DateTime createdAt = tweetData.CreatedAt;
-        DateTime now = DateTime.Now;
-        TimeSpan span = now.Subtract(createdAt);
-        // Time conversions, checks how long time ago the tweet was createad
-        if (span.TotalMinutes < 1)
-        {
-            lblTweetPublishDate.Text = span.Seconds.ToString() + "s";
-        }
-        else if (span.TotalHours < 1)
-        {
-            lblTweetPublishDate.Text = span.Minutes.ToString() + "m";
-        }
-        else if (span.TotalDays < 1)
-        {
-            lblTweetPublishDate.Text = span.Hours.ToString() + "h";
-        }
-        else if (span.TotalDays > 365)
-        {
-            lblTweetPublishDate.Text = tweetData.CreatedAt.ToString("MMM d yyy");
-        }
-        else
-        {
-            lblTweetPublishDate.Text = tweetData.CreatedAt.ToString("MMM d");
-        }
-
-        tweetPublicationData.Controls.Add(lblRetweetedBy);
-        tweetPublicationData.Controls.Add(lblTweetSenderUserName);
-        tweetPublicationData.Controls.Add(lblTweetSenderScreenName);
-        tweetPublicationData.Controls.Add(lblTweetPublishDate);
-
-        HtmlGenericControl divTweetText = new HtmlGenericControl("div");
-        divTweetText.Attributes["class"] = "card-content";
-        // Replace new lines with br tag
-        divTweetText.InnerHtml = tweetData.Text.Replace("\n", "<br />");
-        // Find all links and replace them with hyper links
-        divTweetText.InnerHtml = Regex.Replace(divTweetText.InnerHtml,
-                                        @"((http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?)",
-                                        "<a target='_blank' href='$1'>$1</a>");
-        divTweetText.InnerHtml = Regex.Replace(divTweetText.InnerHtml,
-                                        @"@(\w+)",
-                                        "<a target='_blank' href=ProfilePage.aspx?user=$1>@$1</a>");
-
-        HtmlGenericControl tweetControlsContainer = new HtmlGenericControl("div");
-        tweetControlsContainer.Attributes["class"] = "card-action";
-
+        HtmlGenericControl tweetSenderPictureContainer = twitterClient.GenerateTweetSenderPictureContainer(tweetData);
+        HtmlGenericControl tweetControlsContainer = twitterClient.GenerateTweetControlsContainer();
+        HtmlGenericControl tweetContainer = twitterClient.GenerateTweetContainer(tweetData);
+        HtmlGenericControl tweetDataContainer = twitterClient.GenerateTweetDataContainer();
+        #region Rest of the tweetControlsContainer
         Button replyButton = new Button();
         replyButton.Text = " ";
         replyButton.Attributes["class"] = "reply";
@@ -192,21 +161,15 @@ public partial class MainPage : System.Web.UI.Page
         {
             likeButton.Style.Add("background-image", "url('../images/like.png')");
         }
-
+        #endregion
         tweetControlsContainer.Controls.Add(replyButton);
         tweetControlsContainer.Controls.Add(retweetButton);
         tweetControlsContainer.Controls.Add(likeButton);
-
-        tweetContainer.Controls.Add(tweetPublicationData);
-        tweetContainer.Controls.Add(divTweetText);
         tweetContainer.Controls.Add(tweetControlsContainer);
-
         tweetDataContainer.Controls.Add(tweetSenderPictureContainer);
         tweetDataContainer.Controls.Add(tweetContainer);
-
         divToAppend.Controls.Add(tweetDataContainer);
     }
-
     protected void replyButton_Click(object sender, CommandEventArgs e)
     {
         var argument = ((Button)sender).CommandArgument;
@@ -223,7 +186,6 @@ public partial class MainPage : System.Web.UI.Page
         }
         lblTweetLength.Text = (140 - txtTweet.Text.Length).ToString();
     }
-
     protected void retweetButton_Click(object sender, CommandEventArgs e)
     {
         var argument = ((Button)sender).CommandArgument;
@@ -248,6 +210,5 @@ public partial class MainPage : System.Web.UI.Page
         {
             Tweet.FavoriteTweet(long.Parse(argument));
         }
-        
     }
 }

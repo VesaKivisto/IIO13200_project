@@ -10,9 +10,13 @@ public partial class LogIn : System.Web.UI.Page
         {
             Session["user"] = null;
         }
+    }
+
+    protected void btnSignIn_Click(object sender, System.Web.UI.ImageClickEventArgs e)
+    {
         IAuthenticationContext authenticationContext;
         // App credentials; Key + Secret
-        var appCreds = new ConsumerCredentials("YIlzibzr7LNJlsgMX6BpqWdpn", "ihK9Z2jEmEuDHqeMmrojSM5nza8wtHOxX8EKQFTrD2TRQuwEtj");
+        var appCreds = new ConsumerCredentials("key", "secret");
         // Set URL to redirect to after authentication
         var redirectURL = "http://" + Request.Url.Authority + "/TwitterAuth.aspx";
         // Authentication context, used when signing in with Twitter. This will also be stored to session variable for later use
