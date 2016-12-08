@@ -1,26 +1,25 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Text.RegularExpressions;
+using System.Linq;
 using System.Threading;
-using System.Web.Services;
+using System.Web;
 using System.Web.UI;
 using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
 using Tweetinvi;
 using Tweetinvi.Models;
-// Profile page has no reply feature, as I couldn't get replying work with a popup window
-public partial class ProfilePage : System.Web.UI.Page
+using Tweetinvi.Parameters;
+// Search page turned out to be really similar to Main page, even more similar than Profile page. MVC architecture could have worked here,
+// so I could have had more control on what to show
+public partial class Search : System.Web.UI.Page
 {
-    // Some variables
-    private static IEnumerable<ITweet> latestTweets;
-    private static IEnumerable<ITweet> lastQueriedTimeline;
+    private static IEnumerable<ITweet> matchingTweets;
+    private static IAuthenticatedUser user;
     private static ICredentialsRateLimits rateLimits;
-    protected static long tweetIdToReplyTo = 0;
+    private static long tweetIdToReplyTo = 0;
     private static bool isFavorited = false;
     private static bool isRetweeted = false;
-    private static IUser user;
     protected void Page_Load(object sender, EventArgs e)
     {
         // For some reason this app throws random error when loading the page first time. I made this dirty fix to wait a little before actually loading the page.
@@ -38,74 +37,73 @@ public partial class ProfilePage : System.Web.UI.Page
                 {
                     Response.Redirect("LogIn.aspx");
                 }
-                var screenName = Request.Params.Get("user");
-                if (!String.IsNullOrEmpty(screenName))
-                {
-                    user = Tweetinvi.User.GetUserFromScreenName(screenName);
-                }
+                var query = Request.Params.Get("query");
+                searchHeader.InnerText = "Search results for " + query;
+                user = (IAuthenticatedUser)Session["user"];
                 InitUserData(user);
-                
-                // Gets 200 latest tweets
-                latestTweets = user.GetUserTimeline(200);
+                // Gets 200 results
+                var searchParameter = new SearchTweetsParameters(query)
+                {
+                    MaximumNumberOfResults = 200
+                };
+                matchingTweets = Tweetinvi.Search.SearchTweets(query);
             }
             catch (Exception ex)
             {
-                //lblError.Text = ex.Message;
+                lblError.Text = ex.Message;
             }
-        }
-        GenerateTimeline();
+            GenerateSearchResults();
+        }  
     }
-    // Sets user data. Profile picture, name and tweet, follower and following counts
-    protected void InitUserData(IUser user)
+    // Set user data
+    protected void InitUserData(IAuthenticatedUser user)
     {
         try
         {
-            imgProfilePicture.Attributes["src"] = user.ProfileImageUrl;
             lblUserName.Text = user.Name;
             lblScreenName.Text = lblScreenName.Text = "<a href=ProfilePage.aspx?user=" + user.ScreenName + " target='_blank' style='text-decoration:none;color:#828282;'>@" + user.ScreenName + "</a>";
-            userDescr.InnerHtml = user.Description;
-            userDescr.InnerHtml = Regex.Replace(userDescr.InnerHtml,
-                                            @"((http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?)",
-                                            "<a target='_blank' href='$1'>$1</a>");
-            userDescr.InnerHtml = Regex.Replace(userDescr.InnerHtml,
-                                            @"@(\w+)",
-                                            "<a target='_blank' href=ProfilePage.aspx?user=$1>@$1</a>");
-            userDescr.InnerHtml = Regex.Replace(userDescr.InnerHtml,
-                                            @"#(\w+)",
-                                            "<a target='_blank' href=Search.aspx?query=%23$1>#$1</a>");
-            lblTweets.Text = "Tweets: " + user.StatusesCount.ToString();
-            lblFollowing.Text = "Following: " + user.FriendsCount.ToString();
-            lblFollowers.Text = "Followers: " + user.FollowersCount.ToString();
+            imgProfilePicture.Attributes["src"] = user.ProfileImageUrl;
         }
         catch (Exception ex)
         {
-            //lblError.Text = ex.Message;
+            lblError.Text = ex.Message;
         }
     }
-    // Timeline generation. Used with normal and mentions timeline. Has ratelimit checks, which is not exactly how Tweetinvi suggests to do it
-    // but I couldn't get the actual way to implement this to work so we have this
-    protected void GenerateTimeline()
+    // This sends the new tweet.
+    protected void btnSendTweet_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            // Send tweet
+            if (tweetIdToReplyTo != 0)
+            {
+                Tweet.PublishTweetInReplyTo(txtTweet.Text, tweetIdToReplyTo);
+            }
+            else
+            {
+                Tweet.PublishTweet(txtTweet.Text);
+            }
+            txtTweet.Text = "";
+        }
+        catch (Exception ex)
+        {
+            lblError.Text = ex.Message;
+        }
+    }
+    // Generates search results
+    protected void GenerateSearchResults()
     {
         try
         {
             // Generate home timeline
-            foreach (var tweetData in latestTweets)
+            foreach (var tweetData in matchingTweets)
             {
                 GenerateTweet(tweetData, "divTimeline");
-                lastQueriedTimeline = latestTweets;
             }
         }
         catch (Exception ex)
         {
-            //lblError.Text = ex.Message;
-            if (lastQueriedTimeline != null)
-            {
-                // Last timeline is stored in variable and generated from this if rate limits are exceeded
-                foreach (var tweetData in lastQueriedTimeline)
-                {
-                    GenerateTweet(tweetData, "divTimeline");
-                }
-            }
+            lblError.Text = ex.Message;
         }
     }
     // Tweet generating. The code here could be a bit cleaner and nicer
@@ -121,6 +119,13 @@ public partial class ProfilePage : System.Web.UI.Page
         HtmlGenericControl tweetDataContainer = twitterClient.GenerateTweetDataContainer();
         #region Rest of the tweetControlsContainer
         // Buttons are generated here. I ran into some logic problems when trying to generate buttons in BL, so they're here
+        // Reply button
+        Button replyButton = new Button();
+        replyButton.Text = " ";
+        replyButton.Attributes["class"] = "reply";
+        replyButton.Attributes["onClick"] = "replyButton_Click";
+        replyButton.Command += replyButton_Click;
+        replyButton.CommandArgument = tweetData.ToJson();
         // Retweet button
         Button retweetButton = new Button();
         retweetButton.Text = tweetData.RetweetCount.ToString();
@@ -184,12 +189,37 @@ public partial class ProfilePage : System.Web.UI.Page
         }
         #endregion
         // Add everything to controls
+        tweetControlsContainer.Controls.Add(replyButton);
         tweetControlsContainer.Controls.Add(retweetButton);
         tweetControlsContainer.Controls.Add(likeButton);
         tweetContainer.Controls.Add(tweetControlsContainer);
         tweetDataContainer.Controls.Add(tweetSenderPictureContainer);
         tweetDataContainer.Controls.Add(tweetContainer);
         divToAppend.Controls.Add(tweetDataContainer);
+    }
+    // Function for reply button. Converts the tweet to JSON and parses everything we need from it
+    protected void replyButton_Click(object sender, CommandEventArgs e)
+    {
+        try
+        {
+            var argument = ((Button)sender).CommandArgument;
+            JObject json = JObject.Parse(argument);
+            tweetIdToReplyTo = long.Parse(json["id"].ToString());
+            txtTweet.Text = "@" + json["user"]["screen_name"].ToString() + " ";
+            JArray userMentions = JArray.Parse(json["entities"]["user_mentions"].ToString());
+            foreach (var mention in json["entities"]["user_mentions"])
+            {
+                if (mention["screen_name"].ToString() != json["user"]["screen_name"].ToString())
+                {
+                    txtTweet.Text += "@" + mention["screen_name"] + " ";
+                }
+            }
+            lblTweetLength.Text = (140 - txtTweet.Text.Length).ToString();
+        }
+        catch (Exception ex)
+        {
+            lblError.Text = ex.Message;
+        }
     }
     // Function for retweet button. Gets tweet ID as variable via CommandArgument
     protected void retweetButton_Click(object sender, CommandEventArgs e)
@@ -208,7 +238,7 @@ public partial class ProfilePage : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            //lblError.Text = ex.Message;
+            lblError.Text = ex.Message;
         }
     }
     // Function for like button. Gets tweet ID as variable via CommandArgument
@@ -228,7 +258,7 @@ public partial class ProfilePage : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            //lblError.Text = ex.Message;
+            lblError.Text = ex.Message;
         }
     }
     // Function for delete button. Gets tweet ID as variable via CommandArgument
@@ -241,7 +271,7 @@ public partial class ProfilePage : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            //lblError.Text = ex.Message;
+            lblError.Text = ex.Message;
         }
     }
 }

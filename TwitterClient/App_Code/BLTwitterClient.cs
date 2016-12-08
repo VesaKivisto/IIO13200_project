@@ -23,15 +23,23 @@ public class BLTwitterClient
     private List<Control> controls;
     public BLTwitterClient()
     {
-        //
-        // TODO: Add constructor logic here
-        //
+
     }
+    // Generates div that has tweeter profile picture
     public HtmlGenericControl GenerateTweetSenderPictureContainer(ITweet tweetData)
     {
         #region ImgTweetSenderPicture
         HtmlImage imgTweetSenderPicture = new HtmlImage();
-        imgTweetSenderPicture.Attributes["src"] = tweetData.CreatedBy.ProfileImageUrl;
+        if (tweetData.RetweetedTweet != null)
+        {
+            var retweetedBy = tweetData.CreatedBy;
+            imgTweetSenderPicture.Attributes["src"] = tweetData.RetweetedTweet.CreatedBy.ProfileImageUrl;
+        }
+        else
+        {
+            imgTweetSenderPicture.Attributes["src"] = tweetData.CreatedBy.ProfileImageUrl;
+        }
+        
         #endregion
         #region TweetSenderPictureContainer
         HtmlGenericControl tweetSenderPictureContainer = new HtmlGenericControl("div");
@@ -41,6 +49,7 @@ public class BLTwitterClient
         tweetSenderPictureContainer.Controls.Add(imgTweetSenderPicture);
         return tweetSenderPictureContainer;
     }
+    // Generates div for tweet controls (reply, retweet, like). The actual buttons will be added later
     public HtmlGenericControl GenerateTweetControlsContainer()
     {
         #region TweetControlsContainer
@@ -50,6 +59,7 @@ public class BLTwitterClient
         #endregion
         return tweetControlsContainer;
     }
+    // Generates div container for div. This container has tweeter name, tweet date, tweet text and the controls container
     public HtmlGenericControl GenerateTweetContainer(ITweet tweetData)
     {
         #region LblRetweetedBy
@@ -123,6 +133,9 @@ public class BLTwitterClient
         divTweetText.InnerHtml = Regex.Replace(divTweetText.InnerHtml,
                                         @"@(\w+)",
                                         "<a target='_blank' href=ProfilePage.aspx?user=$1>@$1</a>");
+        divTweetText.InnerHtml = Regex.Replace(divTweetText.InnerHtml,
+                                        @"#(\w+)",
+                                        "<a target='_blank' href=Search.aspx?query=%23$1>#$1</a>");
         #endregion
         #region TweetContainer
         HtmlGenericControl tweetContainer = new HtmlGenericControl("div");
@@ -133,6 +146,7 @@ public class BLTwitterClient
         tweetContainer.Controls.Add(divTweetText);
         return tweetContainer;
     }
+    // Generates div container for the whole tweet. This has everything
     public HtmlGenericControl GenerateTweetDataContainer()
     {
         #region TweetDataContainer

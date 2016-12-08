@@ -1,4 +1,4 @@
-﻿<%@ Page Title="" Language="C#" MasterPageFile="~/MasterPage.master" AutoEventWireup="true" CodeFile="MainPage.aspx.cs" Inherits="MainPage" %>
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/MasterPage.master" AutoEventWireup="true" CodeFile="Search.aspx.cs" Inherits="Search" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" Runat="Server">
     <script>
@@ -53,29 +53,19 @@
                     <br />
                     <asp:Label ID="lblScreenName" runat="server" />
                 </div>
-                <div style="margin-left:12px;position:relative;top:150px;">
-                    <asp:Button ID="btnLogOut" runat="server" Text="Log out" OnClick="btnLogOut_Click" class="btn light-blue" />
-                </div>
             </div>
         </div>
         <!-- Timeline container -->
         <div class="timeLineContainer" id="divTimeline" runat="server" >
             <div class="headerDiv" >
-                <h4>Timeline</h4>
+                <h4 id="searchHeader" runat="server"></h4>
             </div>
             <!-- Dynamically added stuff here -->
-        </div>
-        <!-- Mentions container -->
-        <div class="mentionsContainer" id="divMentions" runat="server" >
-            <div class="headerDiv" >
-                <h4>Mentions</h4>
-            </div>
-            <!-- Dynamically added stuff here -->
-            
+            <asp:Label ID="lblError" runat="server" />
         </div>
         <!-- Exception container -->
         <div style="margin-left:30px;margin-top:50px;">
-            <asp:Label ID="lblError" runat="server" />
+            <asp:Label ID="Label1" runat="server" />
         </div>
     </div>
 </asp:Content>

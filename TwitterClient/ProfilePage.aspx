@@ -2,6 +2,8 @@
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" Runat="Server">
     <script>
+        // Function to set button status when writing a new tweet. Checks the tweet length and enables or disables the button when needed
+        // Tried to put this on Master Page, but it didn't find any elements
         function SetButtonStatus() {
             var maxLength = 140;
             var txtTweet = document.getElementById('<%=txtTweet.ClientID%>').value;
@@ -31,9 +33,9 @@
     <asp:ScriptManager runat="server" EnablePageMethods="true" EnablePartialRendering="true"></asp:ScriptManager>
     <div style="height:750px;width:1500px;">
         <!-- Main container -->
-        <div style="width:20%;float:left;margin-right:4px;">
+        <div style="width:20%;float:left;margin-left:20px;">
             <!-- Profile container -->
-            <div style="margin:15px;">
+            <div style="margin-top:15px;">
                 <!-- Profile image -->
                 <div style="display:inline-block;margin-left:12px;">
                     <asp:Image ID="imgProfilePicture" runat="server" src="" />
@@ -44,6 +46,10 @@
                     <br />
                     <asp:Label ID="lblScreenName" runat="server" />
                 </div>
+                <!-- User description -->
+                <div id="userDescr" runat="server" style="margin-left:12px;margin-bottom:15px;">
+
+                </div>
                 <!-- Tweets, followers, following -->
                 <div style="margin-left:12px;">
                     <asp:Label ID="lblTweets" runat="server" />
@@ -52,7 +58,6 @@
                     <br />
                     <asp:Label ID="lblFollowers" runat="server" />
                     <br />
-                    <asp:Label ID="lblMessages" runat="server" />
                 </div>
             </div>
         </div>
@@ -64,8 +69,12 @@
             <!-- Dynamically added stuff here -->
         </div>
     </div>
+    <!-- Exception container -->
+    <div style="margin-left:30px;margin-top:50px;">
+        <asp:Label ID="lblError" runat="server" />
+    </div>
     <!--
-        Reply modal, maybe trying to get this work
+        Reply modal, maybe trying to get this work. Or not, most likely scrapped idea for now
     <div>
         <div id="divReply" class="modal" style="width:30%;">
             <div class="modal-content">
@@ -78,7 +87,7 @@
     </div>
     -->
     <!--
-        Retweet modal, maybe trying to get this work
+        Retweet modal, maybe trying to get this work. Or not, most likely scrapped idea for now
     <div>
         <div id="divRetweet" class="modal">
             <div class="modal-content">

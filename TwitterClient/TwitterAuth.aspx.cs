@@ -6,6 +6,7 @@ public partial class TwitterAuth : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
+        // Redirect to log in page if authentication context isn't set to session variable for some reason
         if (Session["authCtx"] == null)
         {
             Response.Redirect("LogIn.aspx");

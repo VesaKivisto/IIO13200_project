@@ -21,6 +21,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/js/materialize.min.js"></script>
     <script>
         /*
+        // This is a code snippet for modals. I tried to get replying work as a popup window thingy, but couldn't pass everything needed to a modal so I scrapped the idea
+        // Modals are from Materialize CSS
         $(document).ready(function () {
             $('.modal').modal();
         });
