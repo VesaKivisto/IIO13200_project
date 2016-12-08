@@ -50,7 +50,7 @@ public partial class ProfilePage : System.Web.UI.Page
             }
             catch (Exception ex)
             {
-                //lblError.Text = ex.Message;
+                lblError.Text = ex.Message;
             }
         }
         GenerateTimeline();
@@ -79,7 +79,7 @@ public partial class ProfilePage : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            //lblError.Text = ex.Message;
+            lblError.Text = ex.Message;
         }
     }
     // Timeline generation. Used with normal and mentions timeline. Has ratelimit checks, which is not exactly how Tweetinvi suggests to do it
@@ -97,7 +97,7 @@ public partial class ProfilePage : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            //lblError.Text = ex.Message;
+            lblError.Text = ex.Message;
             if (lastQueriedTimeline != null)
             {
                 // Last timeline is stored in variable and generated from this if rate limits are exceeded
@@ -208,7 +208,7 @@ public partial class ProfilePage : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            //lblError.Text = ex.Message;
+            lblError.Text = ex.Message;
         }
     }
     // Function for like button. Gets tweet ID as variable via CommandArgument
@@ -228,7 +228,7 @@ public partial class ProfilePage : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            //lblError.Text = ex.Message;
+            lblError.Text = ex.Message;
         }
     }
     // Function for delete button. Gets tweet ID as variable via CommandArgument
@@ -241,7 +241,7 @@ public partial class ProfilePage : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            //lblError.Text = ex.Message;
+            lblError.Text = ex.Message;
         }
     }
 }
